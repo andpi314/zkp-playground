@@ -1,0 +1,12 @@
+node_modules
+typechain
+artifacts
+cache
+local
+
+build
+
+# Sensitive data
+*.zkey
+*.ptau
+input.json

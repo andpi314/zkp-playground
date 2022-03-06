@@ -1,0 +1,25 @@
+{
+  "name": "zkp-playground",
+  "version": "1.0.0",
+  "description": "A playground to ease understanding of Zero Knowledge Proofs",
+  "main": "src/index.ts",
+  "repository": "https://github.com/andpi314/zkp-playground.git",
+  "author": "Andrea Provino <andrea.provino.dev@gmail.com>",
+  "license": "MIT",
+  "dependencies": {
+    "snarkjs": "^0.4.14"
+  },
+  "scripts": {
+    "circom:build": "circom src/circuits/FakeHash/FakeHash.circom --r1cs --wasm --sym --c -o ./build",
+    "circom:generate:witness": "node build/FakeHash_js/generate_witness.js build/FakeHash_js/FakeHash.wasm src/circuits/FakeHash/input.json src/circuits/FakeHash/witness.wtns",
+    "ceremony:powers-of-tau": "snarkjs powersoftau new bn128 12 pot12_0000.ptau -v",
+    "ceremony:phase1:contribute": "snarkjs powersoftau contribute pot12_0000.ptau pot12_0001.ptau --name='First contribution' -v",
+    "ceremony:phase2:circuit": "snarkjs powersoftau prepare phase2 pot12_0001.ptau pot12_final.ptau -v",
+    "ceremony:phase2:generate-zkey": "snarkjs groth16 setup build/FakeHash.r1cs pot12_final.ptau fakeHash_0000.zkey",
+    "ceremony:phase2:contribute": "snarkjs zkey contribute fakeHash_0000.zkey fakeHash_0001.zkey --name='Admin' -v",
+    "ceremony:verification-key": "snarkjs zkey export verificationkey fakeHash_0001.zkey verification_key.json",
+    "ceremony:setup": "yarn ceremony:powers-of-tau && yarn ceremony:phase1:contribute && yarn ceremony:phase2:circuit && yarn ceremony:phase2:generate-zkey && yarn ceremony:phase2:contribute && yarn ceremony:verification-key",
+    "zkp:generate": "snarkjs groth16 prove fakeHash_0001.zkey src/circuits/FakeHash/witness.wtns proof.json public.json",
+    "zkp:verify": "snarkjs groth16 verify verification_key.json public.json proof.json"
+  }
+}
